@@ -75,6 +75,9 @@
 /* Clock for timer. */
 #include "clock.h"
 
+//MPL
+#include "duck-io.h"
+
 /**
  * These configuration settings are required to run the mutual auth demo.
  * Throw compilation error if the below configs are not defined.
@@ -189,7 +192,7 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/duck/on"
 
 /**
  * @brief Length of client MQTT topic.
@@ -199,7 +202,7 @@
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                "Hello World!"
+#define MQTT_EXAMPLE_MESSAGE                "quack"
 
 /**
  * @brief The length of the MQTT message published in this example.
@@ -289,6 +292,9 @@
 #define INCOMING_PUBLISH_RECORD_LEN    ( 10U )
 
 /*-----------------------------------------------------------*/
+
+#define DUCK_ON_TIME (10U)
+
 
 /**
  * @brief Structure to keep the MQTT publish packets until an ack is received
@@ -917,6 +923,12 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                    packetIdentifier,
                    ( int ) pPublishInfo->payloadLength,
                    ( const char * ) pPublishInfo->pPayload ) );
+
+        //MPL - Turn the light on for DUCK_ON_TIME seconds
+        duck_io_set_light_on();
+        sleep( DUCK_ON_TIME );   
+        duck_io_set_light_off();
+
     }
     else
     {
@@ -1473,7 +1485,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
     {
         /* Publish messages with QOS1, receive incoming messages and
          * send keep alive messages. */
-        for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
+
+        //MPL - publish once
+       // for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {
             LogInfo( ( "Sending Publish to the MQTT topic %.*s.",
                        MQTT_EXAMPLE_TOPIC_LENGTH,
@@ -1495,19 +1509,50 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
                 LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                             MQTT_Status_strerror( mqttStatus ) ) );
                 returnStatus = EXIT_FAILURE;
-                break;
+               // break;
             }
 
-            LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
+//            LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
 
             /* Leave connection idle for some time. */
             sleep( DELAY_BETWEEN_PUBLISHES_SECONDS );
         }
     }
 
+//MPL - Sit here and wait for more publish events
+    while(1)
+    {
+
+            /* Calling MQTT_ProcessLoop to process incoming publish echo, since
+             * application subscribed to the same topic the broker will send
+             * publish message back to the application. This function also
+             * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
+             * has expired since the last MQTT packet sent and receive
+             * ping responses. */
+            mqttStatus = processLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+            /* For any error in #MQTT_ProcessLoop, exit the loop and disconnect
+             * from the broker. */
+            if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
+            {
+                LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                            MQTT_Status_strerror( mqttStatus ) ) );
+                returnStatus = EXIT_FAILURE;
+                break;
+            }
+
+//            LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
+
+            /* Leave connection idle for some time. */
+            sleep( DELAY_BETWEEN_PUBLISHES_SECONDS );
+
+    }
+
+
+
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Unsubscribe from the topic. */
+        // Unsubscribe from the topic.
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
@@ -1516,23 +1561,23 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Process Incoming UNSUBACK packet from the broker. */
+        // Process Incoming UNSUBACK packet from the broker.
         returnStatus = waitForPacketAck( pMqttContext,
                                          globalUnsubscribePacketIdentifier,
                                          MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
-    /* Send an MQTT Disconnect packet over the already connected TCP socket.
-     * There is no corresponding response for the disconnect packet. After sending
-     * disconnect, client must close the network connection. */
+    // Send an MQTT Disconnect packet over the already connected TCP socket.
+    //  There is no corresponding response for the disconnect packet. After sending
+    //  disconnect, client must close the network connection.
     LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
                AWS_IOT_ENDPOINT_LENGTH,
                AWS_IOT_ENDPOINT ) );
 
     if( returnStatus == EXIT_FAILURE )
     {
-        /* Returned status is not used to update the local status as there
-         * were failures in demo execution. */
+        // Returned status is not used to update the local status as there
+        // were failures in demo execution.
         ( void ) disconnectMqttSession( pMqttContext );
     }
     else
@@ -1540,7 +1585,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
         returnStatus = disconnectMqttSession( pMqttContext );
     }
 
-    /* Reset global SUBACK status variable after completion of subscription request cycle. */
+    // Reset global SUBACK status variable after completion of subscription request cycle.
     globalSubAckStatus = MQTTSubAckFailure;
 
     return returnStatus;
@@ -1661,7 +1706,7 @@ int aws_iot_demo_main( int argc,
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        for( ; ; )
+       // for( ; ; )
         {
             /* Attempt to connect to the MQTT broker. If connection fails, retry after
              * a timeout. Timeout value will be exponentially increased till the maximum
@@ -1706,6 +1751,13 @@ int aws_iot_demo_main( int argc,
                     cleanupOutgoingPublishes();
                 }
 
+                //MPL - Get ready to party
+                duck_io_init();
+
+                //MPL - I made it so it never returns from this
+
+                //MPL - If you publish any string to MQTT topic "devduck001/duck/on", it should turn on the light.
+
                 /* If TLS session is established, execute Subscribe/Publish loop. */
                 returnStatus = subscribePublishLoop( &mqttContext );
 
@@ -1720,7 +1772,7 @@ int aws_iot_demo_main( int argc,
             }
 
             LogInfo( ( "Short delay before starting the next iteration....\n" ) );
-            sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );
+               sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );          
         }
     }
 
