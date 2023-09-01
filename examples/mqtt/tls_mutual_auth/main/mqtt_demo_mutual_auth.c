@@ -76,7 +76,7 @@
 #include "clock.h"
 
 //MPL
-#include "duck-io.h"
+#include "light.h"
 
 /**
  * These configuration settings are required to run the mutual auth demo.
@@ -192,7 +192,7 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/duck/on"
+#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/prando"
 
 /**
  * @brief Length of client MQTT topic.
@@ -202,7 +202,7 @@
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                "quack"
+#define MQTT_EXAMPLE_MESSAGE                "hello"
 
 /**
  * @brief The length of the MQTT message published in this example.
@@ -292,8 +292,6 @@
 #define INCOMING_PUBLISH_RECORD_LEN    ( 10U )
 
 /*-----------------------------------------------------------*/
-
-#define DUCK_ON_TIME (10U)
 
 
 /**
@@ -930,11 +928,11 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
         char state = buffer[0];  // Atribui o valor "1" ou "0" à variável
         if (state == '1') {
             LogInfo( ("Ligando..."));
-            duck_io_set_light_on();
+            light_io_set_light_on();
 
         } else if(state == '0') {
              LogInfo( ("Desligando..."));
-            duck_io_set_light_off();
+            light_io_set_light_off();
         }
 
     }
@@ -1760,11 +1758,9 @@ int aws_iot_demo_main( int argc,
                 }
 
                 //MPL - Get ready to party
-                duck_io_init();
+                light_io_init();
 
                 //MPL - I made it so it never returns from this
-
-                //MPL - If you publish any string to MQTT topic "devduck001/duck/on", it should turn on the light.
 
                 /* If TLS session is established, execute Subscribe/Publish loop. */
                 returnStatus = subscribePublishLoop( &mqttContext );

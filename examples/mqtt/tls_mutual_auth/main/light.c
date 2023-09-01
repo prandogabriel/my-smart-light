@@ -6,7 +6,7 @@
 
 #define BLINK_GPIO GPIO_NUM_2
 
-void duck_io_init(void)
+void light_io_init(void)
 {
     gpio_reset_pin(BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
@@ -14,12 +14,12 @@ void duck_io_init(void)
 
 } 
 
-void duck_io_set_light_on(void){
+void light_io_set_light_on(void){
 
    gpio_set_level(BLINK_GPIO, 1);
 }
 
-void duck_io_set_light_off(void){
+void light_io_set_light_off(void){
     
     gpio_set_level(BLINK_GPIO, 0);
 
