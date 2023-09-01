@@ -924,10 +924,18 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                    ( int ) pPublishInfo->payloadLength,
                    ( const char * ) pPublishInfo->pPayload ) );
 
-        //MPL - Turn the light on for DUCK_ON_TIME seconds
-        duck_io_set_light_on();
-        sleep( DUCK_ON_TIME );   
-        duck_io_set_light_off();
+        const char *buffer = pPublishInfo->pPayload;  // Obtém o ponteiro para o buffer
+
+        // Agora, você pode comparar o conteúdo e atribuir a uma variável
+        char state = buffer[0];  // Atribui o valor "1" ou "0" à variável
+        if (state == '1') {
+            LogInfo( ("Ligando..."));
+            duck_io_set_light_on();
+
+        } else if(state == '0') {
+             LogInfo( ("Desligando..."));
+            duck_io_set_light_off();
+        }
 
     }
     else
