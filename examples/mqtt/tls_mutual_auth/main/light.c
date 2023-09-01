@@ -8,19 +8,13 @@
 
 void light_io_init(void)
 {
-    gpio_reset_pin(BLINK_GPIO);
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-
+    // TODO fazer lógica de inicialização
 } 
 
 void light_io_set_light_on(void){
-
-   gpio_set_level(BLINK_GPIO, 1);
+ // TODO fazer lógica de ligar led
 }
 
 void light_io_set_light_off(void){
-    
-    gpio_set_level(BLINK_GPIO, 0);
-
+    // TODO fazer lógica de desligar led
 }

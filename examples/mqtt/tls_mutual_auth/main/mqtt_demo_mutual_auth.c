@@ -75,7 +75,6 @@
 /* Clock for timer. */
 #include "clock.h"
 
-//MPL
 #include "light.h"
 
 /**
@@ -922,18 +921,7 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                    ( int ) pPublishInfo->payloadLength,
                    ( const char * ) pPublishInfo->pPayload ) );
 
-        const char *buffer = pPublishInfo->pPayload;  // Obtém o ponteiro para o buffer
-
-        // Agora, você pode comparar o conteúdo e atribuir a uma variável
-        char state = buffer[0];  // Atribui o valor "1" ou "0" à variável
-        if (state == '1') {
-            LogInfo( ("Ligando..."));
-            light_io_set_light_on();
-
-        } else if(state == '0') {
-             LogInfo( ("Desligando..."));
-            light_io_set_light_off();
-        }
+                   // TODO fazer lógica de receber mensagem aqui
 
     }
     else
